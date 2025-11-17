@@ -454,6 +454,13 @@ class FileStorage {
 }
 
 // Inicializar aplicación
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFileStorage);
+} else {
+    // El DOM ya está listo, inicializar inmediatamente
+    initFileStorage();
+}
+
+function initFileStorage() {
     window.fileStorage = new FileStorage();
-});
+}
