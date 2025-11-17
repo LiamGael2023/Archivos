@@ -35,8 +35,8 @@ echo "\n";
 
 // 4. Verificar archivo de configuración
 echo "✓ Configuración:\n";
-if (file_exists(__DIR__ . '/config/database.php')) {
-    $config = require __DIR__ . '/config/database.php';
+if (file_exists(__DIR__ . '/../config/database.php')) {
+    $config = require __DIR__ . '/../config/database.php';
     echo "  Driver configurado: {$config['driver']}\n";
     echo "  Host: {$config['host']}\n";
     echo "  Database: {$config['database']}\n";
@@ -121,7 +121,7 @@ if (file_exists(__DIR__ . '/config/database.php')) {
 
 // 8. Verificar directorio uploads
 echo "✓ Directorio uploads:\n";
-$uploadsDir = __DIR__ . '/public/uploads';
+$uploadsDir = __DIR__ . '/uploads';
 if (is_dir($uploadsDir)) {
     echo "  ✅ Existe\n";
     if (is_writable($uploadsDir)) {
