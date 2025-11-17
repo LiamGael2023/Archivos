@@ -25,6 +25,12 @@ class FileStorage {
             uploadFileBtn.addEventListener('click', () => this.showUploadFileModal());
         }
 
+        // Preview de archivos seleccionados
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => this.showFilePreview(e.target.files));
+        }
+
         // Búsqueda
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
@@ -167,42 +173,85 @@ class FileStorage {
         if (modal) {
             modal.classList.remove('active');
             document.getElementById('fileInput').value = '';
+            document.getElementById('filePreview').innerHTML = '';
         }
+    }
+
+    showFilePreview(files) {
+        const preview = document.getElementById('filePreview');
+        if (!preview) return;
+
+        if (files.length === 0) {
+            preview.innerHTML = '';
+            return;
+        }
+
+        let html = '<div style="background: var(--bg-color); padding: 15px; border-radius: 6px;">';
+        html += `<strong>${files.length} archivo(s) seleccionado(s):</strong><ul style="margin: 10px 0 0 0; padding-left: 20px;">`;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            html += `<li>${file.name} (${this.formatFileSize(file.size)})</li>`;
+        }
+
+        html += '</ul></div>';
+        preview.innerHTML = html;
     }
 
     async uploadFile() {
         const fileInput = document.getElementById('fileInput');
-        const file = fileInput.files[0];
+        const files = fileInput.files;
 
-        if (!file) {
-            this.showAlert('Por favor selecciona un archivo', 'error');
+        if (files.length === 0) {
+            this.showAlert('Por favor selecciona al menos un archivo', 'error');
             return;
         }
 
-        const formData = new FormData();
-        formData.append('file', file);
+        // Mostrar progreso
+        this.showAlert(`Subiendo ${files.length} archivo(s)...`, 'info');
 
-        if (this.currentFolderId) {
-            formData.append('folder_id', this.currentFolderId);
+        let uploadedCount = 0;
+        let errorCount = 0;
+
+        // Subir archivos uno por uno
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            if (this.currentFolderId) {
+                formData.append('folder_id', this.currentFolderId);
+            }
+
+            try {
+                const response = await fetch('/api/files/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    uploadedCount++;
+                } else {
+                    errorCount++;
+                    console.error(`Error subiendo ${file.name}:`, data.message);
+                }
+            } catch (error) {
+                errorCount++;
+                console.error(`Error subiendo ${file.name}:`, error.message);
+            }
         }
 
-        try {
-            const response = await fetch('/api/files/upload', {
-                method: 'POST',
-                body: formData
-            });
+        // Mostrar resultado
+        if (uploadedCount > 0) {
+            this.showAlert(`${uploadedCount} archivo(s) subido(s) exitosamente`, 'success');
+            this.hideUploadFileModal();
+            setTimeout(() => location.reload(), 1000);
+        }
 
-            const data = await response.json();
-
-            if (data.success) {
-                this.showAlert('Archivo subido exitosamente', 'success');
-                this.hideUploadFileModal();
-                location.reload();
-            } else {
-                this.showAlert(data.message || 'Error al subir archivo', 'error');
-            }
-        } catch (error) {
-            this.showAlert('Error de conexión: ' + error.message, 'error');
+        if (errorCount > 0) {
+            this.showAlert(`${errorCount} archivo(s) no se pudieron subir`, 'error');
         }
     }
 

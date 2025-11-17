@@ -168,9 +168,13 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="fileInput">Selecciona un archivo:</label>
-                    <input type="file" id="fileInput">
+                    <label for="fileInput">Selecciona uno o más archivos:</label>
+                    <input type="file" id="fileInput" multiple>
+                    <small style="color: var(--text-light); display: block; margin-top: 5px;">
+                        Puedes seleccionar múltiples archivos manteniendo presionada la tecla Ctrl (Cmd en Mac)
+                    </small>
                 </div>
+                <div id="filePreview" style="margin-top: 15px;"></div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="fileStorage.hideUploadFileModal()">Cancelar</button>

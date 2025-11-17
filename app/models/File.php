@@ -135,7 +135,8 @@ class File extends Model
      */
     public function getRecent($limit = 10)
     {
-        $sql = "SELECT TOP (?) * FROM {$this->table} ORDER BY created_at DESC";
+        // Usar sintaxis compatible con MySQL
+        $sql = "SELECT * FROM {$this->table} ORDER BY created_at DESC LIMIT ?";
         return $this->query($sql, [$limit]);
     }
 

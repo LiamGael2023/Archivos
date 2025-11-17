@@ -10,7 +10,17 @@ class Database
         $config = require_once __DIR__ . '/../config/database.php';
 
         try {
-            $dsn = "sqlsrv:Server={$config['host']};Database={$config['database']}";
+            // Construir DSN según el driver
+            if ($config['driver'] === 'mysql') {
+                $dsn = "mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}";
+                if (isset($config['port'])) {
+                    $dsn .= ";port={$config['port']}";
+                }
+            } elseif ($config['driver'] === 'sqlsrv') {
+                $dsn = "sqlsrv:Server={$config['host']};Database={$config['database']}";
+            } else {
+                throw new Exception("Driver no soportado: {$config['driver']}");
+            }
 
             $this->connection = new PDO(
                 $dsn,
@@ -21,6 +31,8 @@ class Database
 
         } catch (PDOException $e) {
             die("Error de conexión: " . $e->getMessage());
+        } catch (Exception $e) {
+            die("Error: " . $e->getMessage());
         }
     }
 

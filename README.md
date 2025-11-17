@@ -17,8 +17,12 @@ Sistema de gestión de archivos completo similar a OwnCloud, desarrollado en PHP
 ## 📋 Requisitos
 
 - PHP 7.4 o superior
-- SQL Server 2012 o superior
-- Extensión PHP PDO con driver sqlsrv
+- **Base de datos** (elige una):
+  - MySQL 5.7+ / MariaDB 10.2+ (Recomendado - más fácil de configurar)
+  - SQL Server 2012+
+- Extensión PHP PDO con driver correspondiente:
+  - `pdo_mysql` para MySQL (generalmente incluido por defecto)
+  - `pdo_sqlsrv` para SQL Server
 - Servidor web (Apache o Nginx)
 - mod_rewrite habilitado (para Apache)
 
@@ -33,29 +37,72 @@ cd Archivos
 
 ### 2. Configurar la base de datos
 
-**a) Crear la base de datos ejecutando el script SQL:**
+#### Opción A: MySQL/MariaDB (Recomendado)
+
+**Instalación automática:**
 
 ```bash
+# El script creará la base de datos y tablas automáticamente
+php install.php
+```
+
+**Instalación manual:**
+
+```bash
+# 1. Configurar conexión
+cp config/database_mysql.example.php config/database.php
+
+# 2. Editar config/database.php con tus credenciales
+# 3. Crear base de datos y tablas
+mysql -u root -p < database/schema_mysql.sql
+```
+
+**Configuración MySQL (config/database.php):**
+
+```php
+return [
+    'driver' => 'mysql',
+    'host' => 'localhost',
+    'database' => 'file_storage',
+    'username' => 'root',
+    'password' => '',
+    'charset' => 'utf8mb4',
+    'port' => 3306,
+    'options' => [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]
+];
+```
+
+#### Opción B: SQL Server
+
+**Instalación automática:**
+
+```bash
+php install.php
+```
+
+**Instalación manual:**
+
+```bash
+# 1. Configurar conexión
+cp config/database.example.php config/database.php
+
+# 2. Crear base de datos y tablas
 sqlcmd -S localhost -U sa -P tu_password -i database/schema.sql
 ```
 
-O ejecutar el archivo `database/schema.sql` en SQL Server Management Studio.
-
-**b) Configurar la conexión:**
-
-```bash
-cp config/database.example.php config/database.php
-```
-
-Editar `config/database.php` con tus credenciales:
+**Configuración SQL Server (config/database.php):**
 
 ```php
 return [
     'driver' => 'sqlsrv',
-    'host' => 'localhost',        // Tu servidor SQL Server
+    'host' => 'localhost',
     'database' => 'file_storage',
-    'username' => 'sa',            // Tu usuario
-    'password' => 'tu_password',   // Tu contraseña
+    'username' => 'sa',
+    'password' => 'tu_password',
     'charset' => 'UTF-8',
     'options' => [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -180,7 +227,9 @@ Archivos/
 
 ### Gestión de Archivos
 
-1. **Subir archivo**: Click en "Subir Archivo" y selecciona el archivo
+1. **Subir archivo(s)**: Click en "Subir Archivo" y selecciona uno o varios archivos
+   - Puedes seleccionar múltiples archivos manteniendo presionada Ctrl (Cmd en Mac)
+   - El sistema subirá todos los archivos seleccionados automáticamente
 2. **Descargar**: Click en el icono de descarga ⬇️
 3. **Renombrar**: Click en el icono de lápiz ✏️
 4. **Eliminar**: Click en el icono de papelera 🗑️
@@ -333,17 +382,49 @@ class MiModelo extends Model
 
 ## 🐛 Solución de Problemas
 
-### Error de conexión a SQL Server
+### Error de conexión a base de datos
 
-Verifica que el driver PDO sqlsrv esté instalado:
+**Verificar drivers PDO instalados:**
 ```bash
-php -m | grep sqlsrv
+php -r "print_r(PDO::getAvailableDrivers());"
 ```
 
-Si no está instalado, instálalo:
+**Para MySQL:**
 ```bash
-# Ubuntu/Debian
+# Verificar extensión
+php -m | grep pdo_mysql
+
+# Si no está instalada (Ubuntu/Debian)
+sudo apt-get install php-mysql
+```
+
+**Para SQL Server:**
+```bash
+# Verificar extensión
+php -m | grep sqlsrv
+
+# Si no está instalada (Ubuntu/Debian)
 sudo pecl install sqlsrv pdo_sqlsrv
+```
+
+### Servidor de base de datos no está ejecutándose
+
+**MySQL:**
+```bash
+# Verificar estado
+sudo systemctl status mysql
+
+# Iniciar servicio
+sudo systemctl start mysql
+```
+
+**SQL Server:**
+```bash
+# Verificar estado
+sudo systemctl status mssql-server
+
+# Iniciar servicio
+sudo systemctl start mssql-server
 ```
 
 ### Archivos no se suben
