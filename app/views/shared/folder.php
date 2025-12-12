@@ -32,6 +32,26 @@
                 <?= htmlspecialchars($folder['name']) ?>
             </h1>
             <p style="color: var(--text-light);">Carpeta compartida</p>
+
+            <?php if (isset($breadcrumb) && count($breadcrumb) > 1): ?>
+            <div style="margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <?php foreach ($breadcrumb as $index => $crumb): ?>
+                    <?php if ($index > 0): ?>
+                        <span style="color: var(--text-light);">›</span>
+                    <?php endif; ?>
+                    <?php if ($index < count($breadcrumb) - 1): ?>
+                        <a href="/shared/<?= $token ?><?= $index === 0 ? '' : '/folder/' . $crumb['id'] ?>"
+                           style="color: var(--primary-color); text-decoration: none;">
+                            <?= htmlspecialchars($crumb['name']) ?>
+                        </a>
+                    <?php else: ?>
+                        <span style="font-weight: 600;">
+                            <?= htmlspecialchars($crumb['name']) ?>
+                        </span>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- File Grid -->
@@ -53,14 +73,20 @@
             <?php else: ?>
                 <!-- Subcarpetas -->
                 <?php foreach ($subfolders as $subfolder): ?>
-                <div class="file-grid-row">
+                <div class="file-grid-row" style="cursor: pointer;" onclick="window.location.href='/shared/<?= $token ?>/folder/<?= $subfolder['id'] ?>'">
                     <div class="file-icon folder-icon">📁</div>
-                    <div class="file-name"><?= htmlspecialchars($subfolder['name']) ?></div>
+                    <div class="file-name">
+                        <a href="/shared/<?= $token ?>/folder/<?= $subfolder['id'] ?>" style="text-decoration: none; color: inherit;">
+                            <?= htmlspecialchars($subfolder['name']) ?>
+                        </a>
+                    </div>
                     <div class="file-type">Carpeta</div>
                     <div class="file-size">-</div>
                     <div class="file-date"><?= date('d/m/Y H:i', strtotime($subfolder['created_at'])) ?></div>
                     <div class="file-actions">
-                        <span style="color: var(--text-light);">📁 Carpeta</span>
+                        <a href="/shared/<?= $token ?>/folder/<?= $subfolder['id'] ?>" class="action-btn" title="Abrir">
+                            📂 Abrir
+                        </a>
                     </div>
                 </div>
                 <?php endforeach; ?>

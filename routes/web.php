@@ -60,6 +60,7 @@ $router->get('api/files/{id}/shares', 'FileController@getShareLinks');
 
 // Ver contenido compartido
 $router->get('shared/{token}', 'SharedController@view');
+$router->get('shared/{token}/folder/{folderId}', 'SharedController@viewFolder');
 $router->get('shared/{token}/download', 'SharedController@download');
 
 // Gestión de enlaces

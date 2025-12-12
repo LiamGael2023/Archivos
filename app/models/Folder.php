@@ -181,4 +181,39 @@ class Folder extends Model
 
         return $result[0]['count'] > 0;
     }
+
+    /**
+     * Verificar si una carpeta es descendiente de otra
+     * (útil para validar acceso en carpetas compartidas)
+     */
+    public function isDescendantOf($folderId, $ancestorId)
+    {
+        if ($folderId == $ancestorId) {
+            return true;
+        }
+
+        $folder = $this->find($folderId);
+
+        if (!$folder) {
+            return false;
+        }
+
+        $currentId = $folder['parent_id'];
+
+        while ($currentId !== null) {
+            if ($currentId == $ancestorId) {
+                return true;
+            }
+
+            $parent = $this->find($currentId);
+
+            if (!$parent) {
+                break;
+            }
+
+            $currentId = $parent['parent_id'];
+        }
+
+        return false;
+    }
 }

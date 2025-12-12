@@ -78,14 +78,102 @@ class SharedController extends Controller
                 // Obtener subcarpetas
                 $subfolders = $this->folderModel->getChildren($link['entity_id']);
 
+                // Crear breadcrumb inicial
+                $breadcrumb = [$folder];
+
                 $this->view('shared.folder', [
                     'folder' => $folder,
                     'files' => $files,
                     'subfolders' => $subfolders,
                     'link' => $link,
-                    'token' => $token
+                    'token' => $token,
+                    'breadcrumb' => $breadcrumb,
+                    'isSubfolder' => false
                 ]);
             }
+
+        } catch (Exception $e) {
+            $this->view('shared.error', [
+                'message' => 'Error al cargar contenido compartido: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Ver subcarpeta dentro de una carpeta compartida
+     */
+    public function viewFolder($token, $folderId)
+    {
+        try {
+            // Verificar que el enlace es válido
+            if (!$this->sharedLinkModel->isValidLink($token)) {
+                $this->view('shared.invalid', [
+                    'message' => 'Este enlace no es válido o ha expirado'
+                ]);
+                return;
+            }
+
+            // Obtener información del enlace
+            $link = $this->sharedLinkModel->getLinkWithEntity($token);
+
+            if (!$link || $link['entity_type'] !== 'folder') {
+                $this->view('shared.invalid', [
+                    'message' => 'Este enlace no corresponde a una carpeta'
+                ]);
+                return;
+            }
+
+            // Verificar que la subcarpeta solicitada es descendiente de la carpeta compartida
+            if (!$this->folderModel->isDescendantOf($folderId, $link['entity_id'])) {
+                $this->view('shared.invalid', [
+                    'message' => 'No tienes acceso a esta carpeta'
+                ]);
+                return;
+            }
+
+            // Obtener la subcarpeta solicitada
+            $folder = $this->folderModel->find($folderId);
+
+            if (!$folder) {
+                $this->view('shared.invalid', [
+                    'message' => 'Carpeta no encontrada'
+                ]);
+                return;
+            }
+
+            // Obtener archivos de la carpeta
+            $files = $this->fileModel->getByFolder($folderId);
+
+            // Obtener subcarpetas
+            $subfolders = $this->folderModel->getChildren($folderId);
+
+            // Obtener breadcrumb desde la carpeta compartida original
+            $breadcrumb = $this->folderModel->getBreadcrumb($folderId);
+
+            // Filtrar breadcrumb para mostrar solo desde la carpeta compartida
+            $filteredBreadcrumb = [];
+            $startAdding = false;
+            foreach ($breadcrumb as $crumb) {
+                if ($crumb['id'] == $link['entity_id']) {
+                    $startAdding = true;
+                }
+                if ($startAdding) {
+                    $filteredBreadcrumb[] = $crumb;
+                }
+            }
+
+            // Incrementar contador de descargas
+            $this->sharedLinkModel->incrementDownloadCount($token);
+
+            $this->view('shared.folder', [
+                'folder' => $folder,
+                'files' => $files,
+                'subfolders' => $subfolders,
+                'link' => $link,
+                'token' => $token,
+                'breadcrumb' => $filteredBreadcrumb,
+                'isSubfolder' => true
+            ]);
 
         } catch (Exception $e) {
             $this->view('shared.error', [
